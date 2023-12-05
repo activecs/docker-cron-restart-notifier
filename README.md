@@ -8,7 +8,9 @@ This Docker image is designed to automatically restart specified Docker containe
 
 ## Running the Container
 Run the container with the following command:
+```bash
 docker run -d -e RESTART_CONTAINERS="container1 container2" -e DISCORD_WEBHOOK_URL="your_discord_webhook_url"
+```
 
 ## Environment Variables
 - CRON_SCHEDULE: every 60 days by default
