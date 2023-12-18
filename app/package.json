@@ -1,0 +1,23 @@
+{
+  "name": "docker-restart-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "lint": "eslint . --ext .js --fix"
+  },
+  "dependencies": {
+    "discord-notification": "^1.0.3",
+    "child_process": "^1.0.2",
+    "cron-parser": "^4.9.0"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "prettier": "^3.0.0"
+  }
+}

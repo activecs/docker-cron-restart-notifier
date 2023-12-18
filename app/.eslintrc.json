@@ -1,0 +1,18 @@
+{
+  "env": {
+    "browser": false,
+    "es2021": true
+  },
+  "extends": ["standard", "prettier"],
+  "plugins": ["prettier"],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    "prettier/prettier": "error",
+    "arrow-body-style": "off",
+    "prefer-arrow-callback": "off",
+    "max-len": ["warn", { "code": 160 }]
+  }
+}
