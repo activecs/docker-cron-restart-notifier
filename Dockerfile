@@ -1,5 +1,5 @@
 # Stage 1: Build the Node.js application
-FROM node:alpine as builder
+FROM node:latest as builder
 
 # Set working directory
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN npm install
 COPY . /app
 
 # Stage 2: Setup the final image
-FROM alpine:latest
+FROM node:alpine
 
 # Install Docker CLI
 RUN apk add --no-cache docker-cli
