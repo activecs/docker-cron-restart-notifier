@@ -4,13 +4,13 @@
 This Docker image is designed to automatically restart specified Docker containers every 60 days and send notifications to a Discord channel upon each restart. It's particularly useful for maintaining long-running services, ensuring they're periodically refreshed and stakeholders are informed of these actions.
 
 ## Features
-- Automated Container Restart: Restart specified Docker containers every 60 days.
+- Automated Container Restart: Restart specified Docker containers.
 - Discord Notifications: Sends a message to a Discord channel after each container restart.
 
 ## Running the Container
 Run the container with the following command:
 ```bash
-docker run -d -e RESTART_CONTAINERS="container1 container2" -e DISCORD_WEBHOOK_URL="your_discord_webhook_url"
+docker run -d -e RESTART_CONTAINERS="container1,container2" -e DISCORD_WEBHOOK_URL="your_discord_webhook_url"
 ```
 
 ## Environment Variables
