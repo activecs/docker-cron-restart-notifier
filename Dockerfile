@@ -26,16 +26,12 @@ COPY --from=builder /app /app
 # Set working directory
 WORKDIR /app
 
-# Set default cron schedule (60 days)
-ENV CRON_SCHEDULE="0 0 */60 * *"
+# Set default cron schedule (30 days)
+ENV CRON_SCHEDULE="0 0 0 */30 * *"
 # Environment variable to control immediate execution
 ENV RUN_ON_STARTUP="false"
-
-# Setup cron job
-RUN echo "$CRON_SCHEDULE cd /app && node app.js" > /etc/crontabs/root
 
 COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
-CMD ["node", "index.js"]
