@@ -4,7 +4,7 @@ const cronParser = require('cron-parser')
 
 async function main() {
   const args = {}
-  const containers = process.env.RESTART_CONTAINERS ? process.env.CONTAINERS.split(',') : []
+  const containers = process.env.RESTART_CONTAINERS ? process.env.RESTART_CONTAINERS.split(',') : []
   const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL
   const cronExpression = process.env.CRON_SCHEDULE
 
