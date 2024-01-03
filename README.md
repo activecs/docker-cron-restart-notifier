@@ -14,7 +14,25 @@ docker run -d -e RESTART_CONTAINERS="container1 container2" -e DISCORD_WEBHOOK_U
 ```
 
 ## Environment Variables
-- CRON_SCHEDULE: every 60 days by default
+- CRON_SCHEDULE: every 30 days by default
 - RESTART_CONTAINERS: A space-separated list of container names to be restarted.
 - RUN_ON_STARTUP: control immediate execution, false by default
 - DISCORD_WEBHOOK_URL: The webhook URL for sending notifications to Discord.
+
+## Sample docker-compose.yml
+```yaml
+version: "3.4"
+
+services:
+  restart-notifier:
+    container_name: restart-notifier
+    image: index.docker.io/deduard/tools:restart-notifier-20240103
+    restart: unless-stopped
+    environment:
+      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/11920'
+      RESTART_CONTAINERS: "nervous_moore1,nervous_moore2"
+      RUN_ON_STARTUP: "false"
+      CRON_SCHEDULE: "0 4 * * FRI" # Every Friday at 4:00 AM
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
