@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Alpine comes with built in cron schedules
+# min   hour    day     month   weekday command
+# */15    *       *       *       *       run-parts /etc/periodic/15min
+# 0       *       *       *       *       run-parts /etc/periodic/hourly
+# 0       2       *       *       *       run-parts /etc/periodic/daily
+# 0       3       *       *       6       run-parts /etc/periodic/weekly
+# 0       5       1       *       *       run-parts /etc/periodic/monthly
+
 # Setup cron job
 touch crontab.tmp \
   && echo "$CRON_SCHEDULE cd /app && node index.js >> /cron.log 2>&1 " > crontab.tmp \
@@ -18,5 +26,15 @@ if [ "$RUN_ON_STARTUP" = "true" ]; then
 fi
 
 # Start the cron daemon in the foreground
+# crond --help
+# BusyBox v1.28.4 (2018-05-30 10:45:57 UTC) multi-call binary.
+# Usage: crond -fbS -l N -d N -L LOGFILE -c DIR
+#        -f      Foreground
+#        -b      Background (default)
+#        -S      Log to syslog (default)
+#        -l N    Set log level. Most verbose 0, default 8
+#        -d N    Set log level, log to stderr
+#        -L FILE Log to FILE
+#        -c DIR  Cron dir. Default:/var/spool/cron/crontabs
 echo "Starting cron daemon in the foreground - $CRON_SCHEDULE"
 exec crond -f -d 8
