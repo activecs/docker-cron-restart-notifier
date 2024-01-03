@@ -5,13 +5,15 @@ FROM node:latest as builder
 WORKDIR /app
 
 # Copy package.json and package-lock.json
-COPY /app/package*.json /app/
+COPY notifier-app/package*.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the application source code
-COPY . /app
+COPY notifier-app/ .
+
+RUN ls -la /app/*
 
 # Stage 2: Setup the final image
 FROM node:alpine
@@ -20,6 +22,7 @@ FROM node:alpine
 RUN apk add --no-cache docker-cli
 # Copy the built Node.js application from the builder stage
 COPY --from=builder /app /app
+
 # Set working directory
 WORKDIR /app
 
@@ -35,5 +38,4 @@ COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
-CMD ["node", "/app/index.js"]
-
+CMD ["node", "index.js"]
