@@ -18,5 +18,5 @@ if [ "$RUN_ON_STARTUP" = "true" ]; then
 fi
 
 # Start the cron daemon in the foreground
-echo "Starting cron "
+echo "Starting cron daemon in the foreground - $CRON_SCHEDULE"
 exec crond -f -d 8
