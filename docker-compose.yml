@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 
 services:
   restart-notifier:
@@ -6,8 +6,8 @@ services:
     image: index.docker.io/deduard/tools:restart-notifier-20240103
     restart: unless-stopped
     environment:
-      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/1192072309452853270/mRC3HfP8ZF0R6oT5_MFeg3WTUAo_bf0LR8'
-      RESTART_CONTAINERS: "nervous_moore"
+      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/11920'
+      RESTART_CONTAINERS: "nervous_moore1,nervous_moore2"
       RUN_ON_STARTUP: "false"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
