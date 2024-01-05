@@ -22,3 +22,5 @@ jobs:
         run: docker build . --tag deduard/tools:restart-notifier-$(date +%Y%m%d)
       - name: Publish Docker image
         run: docker push deduard/tools:restart-notifier-$(date +%Y%m%d)
+      - name: Publish Docker image Latest
+        run: docker push deduard/tools:restart-notifier-latest

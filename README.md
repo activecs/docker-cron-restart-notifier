@@ -26,7 +26,7 @@ version: "3.4"
 services:
   restart-notifier:
     container_name: restart-notifier
-    image: index.docker.io/deduard/tools:restart-notifier-20240103
+    image: index.docker.io/deduard/tools:restart-notifier-latest
     restart: unless-stopped
     environment:
       DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/11920'
