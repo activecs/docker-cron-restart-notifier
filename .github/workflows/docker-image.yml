@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
       - name: Build the Docker image
-        run: docker build . --tag deduard/tools:restart-notifier-$(date +%Y%m%d)
+        run: docker build . -t deduard/tools:restart-notifier-$(date +%Y%m%d) -t deduard/tools:restart-notifier-latest
       - name: Publish Docker image
         run: docker push deduard/tools:restart-notifier-$(date +%Y%m%d)
       - name: Publish Docker image Latest
