@@ -18,9 +18,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      - name: Build the Docker image
-        run: docker build . -t deduard/tools:restart-notifier-$(date +%Y%m%d) -t deduard/tools:restart-notifier-latest
-      - name: Publish Docker image
-        run: docker push deduard/tools:restart-notifier-$(date +%Y%m%d)
-      - name: Publish Docker image Latest
-        run: docker push deduard/tools:restart-notifier-latest
+
+      - name: install buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          version: latest
+
+      - name: Build Docker image
+        run: docker buildx build --push -t deduard/tools:restart-notifier-$(date +%Y%m%d) -t deduard/tools:restart-notifier-latest --platform linux/amd64,linux/arm/v7,linux/arm64 . --rm
