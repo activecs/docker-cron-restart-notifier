@@ -101,5 +101,7 @@ async function sendStartupNotification(discordWebhookUrl, cronExpression) {
 }
 
 main()
+    .then(() => console.log("Done"))
+    .catch((ex) => console.log(ex.message));
 
 module.exports = { main }
