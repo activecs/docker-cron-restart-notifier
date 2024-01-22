@@ -18,6 +18,6 @@
     "eslint-plugin-n": "^16.6.1",
     "eslint-plugin-prettier": "^5.1.2",
     "eslint-plugin-promise": "^6.0.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.2.4"
   }
 }
