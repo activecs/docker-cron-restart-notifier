@@ -7,6 +7,7 @@ async function main() {
   const containers = process.env.RESTART_CONTAINERS ? process.env.RESTART_CONTAINERS.split(',') : []
   const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL
   const cronExpression = process.env.CRON_SCHEDULE
+  const stopGracePeriod = process.env.STOP_GRACE_PERIOD || 5
 
   if (!discordWebhookUrl || (!containers.length && !cronExpression)) {
     console.error('Missing required environment variables.')
