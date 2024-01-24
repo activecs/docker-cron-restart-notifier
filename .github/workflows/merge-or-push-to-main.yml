@@ -1,0 +1,33 @@
+name: Merge or push to main workflow
+
+on:
+
+  workflow_dispatch:
+
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - 'README.md'
+      - '.github/**'
+
+jobs:
+  checkout:
+    name: Checkout
+    runs-on: self-hosted
+    outputs:
+      date: ${{ steps.date.outputs.date }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+  build-image:
+    name: Build and push Docker image
+    needs: [checkout]
+    uses: ./.github/workflows/publish-docker-image.yml
+    with:
+      docker_tags: deduard/tools:restart-notifier-${{ needs.checkout.outputs.date }}
+    secrets: inherit
