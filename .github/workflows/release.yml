@@ -28,7 +28,7 @@ jobs:
           " > release_notes.md
           echo "Docker Image
           " >> release_notes.md
-          echo "https://hub.docker.com/r/deduard/tools/tags?page=1&name=cloudflare-dns-ip-updater" >> release_notes.md
+          echo "https://hub.docker.com/r/deduard/tools/tags?page=1&name=restart-notifier" >> release_notes.md
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "notes<<$EOF" >> $GITHUB_OUTPUT
           echo "$(cat release_notes.md)." >> $GITHUB_OUTPUT
