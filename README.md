@@ -16,6 +16,7 @@ docker run -d -e RESTART_CONTAINERS="container1,container2" -e DISCORD_WEBHOOK_U
 ## Environment Variables
 - CRON_SCHEDULE: every 30 days by default
 - RESTART_CONTAINERS: A comma-separated list of container names to be restarted.
+- CYCLE_PERIOD: delay between container restarts, 10 seconds by default
 - RUN_ON_STARTUP: control immediate execution, false by default
 - DISCORD_WEBHOOK_URL: The webhook URL for sending notifications to Discord.
 

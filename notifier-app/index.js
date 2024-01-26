@@ -1,47 +1,57 @@
 const { DiscordNotification } = require('@penseapp/discord-notification')
+const { Queue } = require('async-await-queue')
 const { exec } = require('child_process')
 const cronParser = require('cron-parser')
 
 async function main() {
-  const args = {}
-  const containers = process.env.RESTART_CONTAINERS ? process.env.RESTART_CONTAINERS.split(',') : []
-  const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL
-  const cronExpression = process.env.CRON_SCHEDULE
-  const stopGracePeriod = process.env.STOP_GRACE_PERIOD || 5
+  const { containers, discordWebhookUrl, cronExpression, cyclePeriod } = getEnvironmentVariables()
+  const cycleLimiter = new Queue(1, cyclePeriod)
+  const args = getArguments()
 
   if (!discordWebhookUrl || (!containers.length && !cronExpression)) {
     console.error('Missing required environment variables.')
     process.exit(1)
   }
 
+  if (args.SEND_NEXT_EXECUTION_NOTIFICATION) {
+    await sendStartupNotification(discordWebhookUrl, cronExpression)
+  } else {
+    await restartContainersAndNotify(containers, discordWebhookUrl, cycleLimiter)
+  }
+}
+
+function getEnvironmentVariables() {
+  const containers = process.env.RESTART_CONTAINERS ? process.env.RESTART_CONTAINERS.split(',') : []
+  const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL
+  const cronExpression = process.env.CRON_SCHEDULE
+  const cyclePeriod = process.env.CYCLE_PERIOD || 10000
+
+  return { containers, discordWebhookUrl, cronExpression, cyclePeriod }
+}
+
+function getArguments() {
+  const args = {}
   process.argv.slice(2).forEach(arg => {
     const [key, value] = arg.split('=')
     args[key] = value || true
   })
-
-  if (args.SEND_NEXT_EXECUTION_NOTIFICATION) {
-    await sendStartupNotification(discordWebhookUrl, cronExpression)
-  } else {
-    await restartContainersAndNotify(containers, discordWebhookUrl)
-  }
+  return args
 }
 
-async function restartContainersAndNotify(containers, discordWebhookUrl) {
+async function restartContainersAndNotify(containers, discordWebhookUrl, cycleLimiter) {
   for (const container of containers) {
     const startTime = new Date()
-    try {
-      const output = await restartContainer(container)
-      await sendDiscordNotification(container, discordWebhookUrl, true, startTime, output)
-    } catch (error) {
-      console.error(error)
-      await sendDiscordNotification(container, discordWebhookUrl, false, startTime, error.message)
-    }
+    await cycleLimiter.wait(container, 0)
+    await restartContainer(container)
+      .then(output => sendDiscordNotification(container, discordWebhookUrl, true, startTime, output))
+      .catch(error => sendDiscordNotification(container, discordWebhookUrl, false, startTime, error.message))
+      .finally(() => cycleLimiter.end(container))
   }
 }
 
 async function restartContainer(containerName) {
   return new Promise((resolve, reject) => {
-    exec(`docker restart ${containerName} && docker ps | grep ${containerName}`, (error, stdout, stderr) => {
+    exec(`docker restart ${containerName} && sleep 2 && docker ps | grep ${containerName}`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error restarting container ${containerName}:`, stderr)
         reject(error)
@@ -65,7 +75,7 @@ async function sendDiscordNotification(containerName, discordWebhookUrl, success
         .addField({ name: 'Output', value: output, inline: false })
         .addFooter(`Total execution time: ${executionTime} ms`)
         .sendMessage()
-    console.log(`Discord notification sent for ${containerName}.`)
+    console.log(`Discord notification sent for ${containerName}, output: ${output}`)
   } catch (error) {
     console.error(`Error sending Discord notification for ${containerName}: ${error}`)
   }
