@@ -5,17 +5,17 @@ const cronParser = require('cron-parser')
 
 async function main() {
   const { containers, discordWebhookUrl, cronExpression, cyclePeriod } = getEnvironmentVariables()
-  const cycleLimiter = new Queue(1, cyclePeriod)
-  const args = getArguments()
-
-  if (!discordWebhookUrl || (!containers.length && !cronExpression)) {
-    console.error('Missing required environment variables.')
+  if (!isValidWebhookURL(discordWebhookUrl)) {
+    console.error('Invalid Discord webhook URL, it should be in the format: https://discord.com/api/webhooks/1234567890/abc123')
+  }
+  if (!containers.length || !cronExpression) {
+    console.error('Missing required environment variables: RESTART_CONTAINERS, CRON_SCHEDULE')
     process.exit(1)
   }
-
-  if (args.SEND_NEXT_EXECUTION_NOTIFICATION) {
+  if (getArguments().SEND_NEXT_EXECUTION_NOTIFICATION) {
     await sendStartupNotification(discordWebhookUrl, cronExpression)
   } else {
+    const cycleLimiter = new Queue(1, cyclePeriod)
     await restartContainersAndNotify(containers, discordWebhookUrl, cycleLimiter)
   }
 }
@@ -36,6 +36,11 @@ function getArguments() {
     args[key] = value || true
   })
   return args
+}
+
+function isValidWebhookURL(url) {
+  const discordWebhookURLPattern = /^https:\/\/discord\.com\/api\/webhooks\/\d+\/\w+$/;
+  return discordWebhookURLPattern.test(url);
 }
 
 async function restartContainersAndNotify(containers, discordWebhookUrl, cycleLimiter) {
