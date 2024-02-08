@@ -16,14 +16,22 @@ touch crontab.tmp \
 
 # Check if DISCORD_WEBHOOK_URL is provided
 if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-    echo "Error: DISCORD_WEBHOOK_URL environment variable is required." >&2
-    exit 1
+    echo "Warning: DISCORD_WEBHOOK_URL environment variable is empty." >&2
+fi
+
+# Check if DISCORD_WEBHOOK_URL is provided
+if [ -z "$SLACK_WEBHOOK_URL" ]; then
+    echo "Warning: SLACK_WEBHOOK_URL environment variable is empty." >&2
 fi
 
 if [ "$RUN_ON_STARTUP" = "true" ]; then
+  echo "Running on startup"
+  node /app/index.js
+else
   echo "Sending startup notification"
   node /app/index.js SEND_NEXT_EXECUTION_NOTIFICATION
 fi
+
 
 # Start the cron daemon in the foreground
 # crond --help
