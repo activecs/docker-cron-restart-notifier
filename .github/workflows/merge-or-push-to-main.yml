@@ -29,5 +29,5 @@ jobs:
     needs: [checkout]
     uses: ./.github/workflows/publish-docker-image.yml
     with:
-      docker_tags: deduard/tools:restart-notifier-test
+      docker_tags: deduard/tools:restart-notifier-${{ needs.checkout.outputs.date }},deduard/tools:restart-notifier-test
     secrets: inherit
