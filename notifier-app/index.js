@@ -30,11 +30,10 @@ function validateWebhooksURL() {
 
 function getEnvironmentVariables() {
   const containers = process.env.RESTART_CONTAINERS ? process.env.RESTART_CONTAINERS.split(',') : []
-  const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL
   const cronExpression = process.env.CRON_SCHEDULE
   const cyclePeriod = process.env.CYCLE_PERIOD || 10000
 
-  return { containers, discordWebhookUrl, cronExpression, cyclePeriod }
+  return { containers, cronExpression, cyclePeriod }
 }
 
 function getArguments() {

@@ -40,12 +40,12 @@ async function sendNextExecutionNotification(nextExecutionDate) {
         await discordNotification
             .sucessfulMessage()
             .addTitle('Container Restart Scheduled')
-            .addDescription(`The next scheduled container restart is set for ${nextExecutionDate.toDateString()}.`)
+            .addDescription(`The next scheduled container restart is set for ${nextExecutionDate.toLocaleString()}.`)
             .addFooter('Container Restart Scheduler')
             .sendMessage()
-        console.log('Startup notification sent.')
+        console.log('Startup discord notification sent.')
     } catch (error) {
-        console.error(`Error sending startup notification: ${error}`)
+        console.error(`Error discord sending startup notification: ${error}`)
     }
 }
 

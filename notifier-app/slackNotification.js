@@ -46,7 +46,7 @@ async function sendNextExecutionNotification(nextExecutionDate) {
     }
     const webhook = new IncomingWebhook(slackWebhookUrl);
     const title = 'Container Restart Scheduled';
-    const text = `The next scheduled container restart is set for ${nextExecutionDate.toDateString()}.`;
+    const text = `The next scheduled container restart is set for ${nextExecutionDate.toLocaleString()}.`;
 
     try {
         await webhook.send({
@@ -61,9 +61,9 @@ async function sendNextExecutionNotification(nextExecutionDate) {
                 }
             ]
         });
-        console.log('Startup notification sent.');
+        console.log('Startup slack notification sent.');
     } catch (error) {
-        console.error(`Error sending startup notification: ${error}`);
+        console.error(`Error slack sending startup notification: ${error}`);
     }
 }
 
