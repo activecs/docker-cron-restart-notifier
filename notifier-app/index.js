@@ -1,22 +1,30 @@
-const { DiscordNotification } = require('@penseapp/discord-notification')
 const { Queue } = require('async-await-queue')
 const { exec } = require('child_process')
 const cronParser = require('cron-parser')
+const slackNotification = require('./slackNotification')
+const discordNotification = require('./discordNotification')
 
 async function main() {
-  const { containers, discordWebhookUrl, cronExpression, cyclePeriod } = getEnvironmentVariables()
-  if (!isValidWebhookURL(discordWebhookUrl)) {
-    console.error('Invalid Discord webhook URL, it should be in the format: https://discord.com/api/webhooks/1234567890/abc123')
-  }
+  validateWebhooksURL()
+  const { containers, cronExpression, cyclePeriod } = getEnvironmentVariables()
   if (!containers.length || !cronExpression) {
     console.error('Missing required environment variables: RESTART_CONTAINERS, CRON_SCHEDULE')
     process.exit(1)
   }
   if (getArguments().SEND_NEXT_EXECUTION_NOTIFICATION) {
-    await sendStartupNotification(discordWebhookUrl, cronExpression)
+    await sendNextExecutionNotification(cronExpression)
   } else {
     const cycleLimiter = new Queue(1, cyclePeriod)
-    await restartContainersAndNotify(containers, discordWebhookUrl, cycleLimiter)
+    await restartContainersAndNotify(containers, cycleLimiter)
+  }
+}
+
+function validateWebhooksURL() {
+  if(!discordNotification.validateWebhookUrl()) {
+    console.warn('Invalid Discord webhook URL, it should be in the format: https://discord.com/api/webhooks/1234567890/abc123')
+  }
+  if(!slackNotification.validateWebhookUrl()) {
+    console.warn('Invalid Slack webhook URL, it should be in the format: https://hooks.slack.com/services/1234567890/abc123')
   }
 }
 
@@ -38,20 +46,19 @@ function getArguments() {
   return args
 }
 
-function isValidWebhookURL(url) {
-  const discordWebhookURLPattern = /^https:\/\/discord\.com\/api\/webhooks\/\d+\/\w+$/;
-  return discordWebhookURLPattern.test(url);
-}
-
-async function restartContainersAndNotify(containers, discordWebhookUrl, cycleLimiter) {
+async function restartContainersAndNotify(containers, cycleLimiter) {
   for (const container of containers) {
     const startTime = new Date()
     await cycleLimiter.wait(container, 0)
     await restartContainer(container)
-      .then(output => sendDiscordNotification(container, discordWebhookUrl, true, startTime, output))
-      .catch(error => sendDiscordNotification(container, discordWebhookUrl, false, startTime, error.message))
-      .finally(() => cycleLimiter.end(container))
+        .then(output => sendRestartNotification(container, true, getRestartExecutionTime(startTime), output))
+        .catch(error => sendRestartNotification(container, false, getRestartExecutionTime(startTime), error.message))
+        .finally(() => cycleLimiter.end(container))
   }
+}
+
+function getRestartExecutionTime(startTime) {
+  return new Date() - startTime
 }
 
 async function restartContainer(containerName) {
@@ -68,22 +75,15 @@ async function restartContainer(containerName) {
   })
 }
 
-async function sendDiscordNotification(containerName, discordWebhookUrl, success, startTime, output) {
-  const executionTime = new Date() - startTime
-  const discordNotification = new DiscordNotification("restart-notifier", discordWebhookUrl)
-  const message = success ? discordNotification.sucessfulMessage() : discordNotification.errorMessage()
-  try {
-    await message
-        .addTitle('Cron Restart Container')
-        .addDescription(`The scheduled restart task for Docker container ${containerName} has been executed.`)
-        .addField({ name: 'Status', value: success ? 'Successfully restarted' : 'Failed to restart', inline: false })
-        .addField({ name: 'Output', value: output, inline: false })
-        .addFooter(`Total execution time: ${executionTime} ms`)
-        .sendMessage()
-    console.log(`Discord notification sent for ${containerName}, output: ${output}`)
-  } catch (error) {
-    console.error(`Error sending Discord notification for ${containerName}: ${error}`)
-  }
+async function sendRestartNotification(containerName, success, executionTime, output) {
+  await discordNotification.sendRestartNotification(containerName, success, executionTime, output)
+  await slackNotification.sendRestartNotification(containerName, success, executionTime, output)
+}
+
+async function sendNextExecutionNotification(cronExpression) {
+  const nextExecutionDate = getNextExecutionDate(cronExpression)
+  await discordNotification.sendNextExecutionNotification(nextExecutionDate)
+  await slackNotification.sendNextExecutionNotification(nextExecutionDate)
 }
 
 function getNextExecutionDate(cronExpression) {
@@ -93,26 +93,6 @@ function getNextExecutionDate(cronExpression) {
   } catch (err) {
     console.error('Error parsing cron expression:', err)
     return null
-  }
-}
-
-async function sendStartupNotification(discordWebhookUrl, cronExpression) {
-  const nextExecutionDate = getNextExecutionDate(cronExpression)
-  if (!nextExecutionDate) {
-    console.log('Unable to determine the next execution date.')
-    return
-  }
-  const discordNotification = new DiscordNotification("restart-notifier", discordWebhookUrl)
-  try {
-    await discordNotification
-    .sucessfulMessage()
-    .addTitle('Container Restart Scheduled')
-    .addDescription(`The next scheduled container restart is set for ${nextExecutionDate.toDateString()}.`)
-    .addFooter('Container Restart Scheduler')
-    .sendMessage()
-    console.log('Startup notification sent.')
-  } catch (error) {
-    console.error(`Error sending startup notification: ${error}`)
   }
 }
 
