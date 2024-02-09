@@ -8,10 +8,13 @@ function getEnvironmentVariables() {
 function validateWebhookUrl() {
     const { slackWebhookUrl } = getEnvironmentVariables();
     const slackWebhookURLPattern = /^https:\/\/hooks\.slack\.com\/services\/T[A-Z0-9]+\/B[A-Z0-9]+\/[a-zA-Z0-9]+$/;
-    return slackWebhookURLPattern.test(slackWebhookUrl);
+    return slackWebhookURLPattern.test(slackWebhookUrl)
 }
 
 async function sendRestartNotification(containerName, success, executionTime, output) {
+    if (!validateWebhookUrl()) {
+        return
+    }
     const { slackWebhookUrl } = getEnvironmentVariables();
     const webhook = new IncomingWebhook(slackWebhookUrl);
 
@@ -38,7 +41,11 @@ async function sendRestartNotification(containerName, success, executionTime, ou
     }
 }
 
-async function sendNextExecutionNotification(nextExecutionDate) {
+async function sendNextExecutionNotification(containers, nextExecutionDate) {
+    if (!validateWebhookUrl()) {
+        console.warn('Invalid Slack webhook URL, it should be in the format: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX')
+        return
+    }
     const { slackWebhookUrl } = getEnvironmentVariables();
     if (!nextExecutionDate) {
         console.log('Unable to determine the next execution date.');
@@ -46,7 +53,7 @@ async function sendNextExecutionNotification(nextExecutionDate) {
     }
     const webhook = new IncomingWebhook(slackWebhookUrl);
     const title = 'Container Restart Scheduled';
-    const text = `The next scheduled container restart is set for ${nextExecutionDate.toLocaleString()}.`;
+    const text = `The next scheduled (${containers}) container restart is set for ${nextExecutionDate.toLocaleString()}.`;
 
     try {
         await webhook.send({

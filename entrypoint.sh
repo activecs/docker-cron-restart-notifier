@@ -28,9 +28,11 @@ if [ "$RUN_ON_STARTUP" = "true" ]; then
   echo "Running on startup"
   node /app/index.js
 else
-  echo "Sending startup notification"
-  node /app/index.js SEND_NEXT_EXECUTION_NOTIFICATION
+  echo "Next scheduled execution time: $CRON_SCHEDULE"
+  node /app/index.js SEND_ONLY_NEXT_SCHEDULED_EXECUTION_TIME_NOTIFICATION
 fi
+
+
 
 
 # Start the cron daemon in the foreground
