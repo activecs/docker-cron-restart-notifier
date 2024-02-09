@@ -12,6 +12,9 @@ function validateWebhookUrl() {
 }
 
 async function sendRestartNotification(containerName, success, executionTime, output) {
+    if (!validateWebhookUrl()) {
+        return
+    }
     const { discordWebhookUrl } = getEnvironmentVariables()
     const discordNotification = new DiscordNotification("restart-notifier", discordWebhookUrl)
     const message = success ? discordNotification.sucessfulMessage() : discordNotification.errorMessage()
@@ -29,7 +32,11 @@ async function sendRestartNotification(containerName, success, executionTime, ou
     }
 }
 
-async function sendNextExecutionNotification(nextExecutionDate) {
+async function sendNextExecutionNotification(containers, nextExecutionDate) {
+    if (!validateWebhookUrl()) {
+        console.warn('Invalid Discord webhook URL, it should be in the format: https://discord.com/api/webhooks/1234567890/abc123')
+        return
+    }
     const { discordWebhookUrl } = getEnvironmentVariables()
     if (!nextExecutionDate) {
         console.log('Unable to determine the next execution date.')
@@ -40,7 +47,7 @@ async function sendNextExecutionNotification(nextExecutionDate) {
         await discordNotification
             .sucessfulMessage()
             .addTitle('Container Restart Scheduled')
-            .addDescription(`The next scheduled container restart is set for ${nextExecutionDate.toLocaleString()}.`)
+            .addDescription(`The next scheduled (${containers}) container restart is set for ${nextExecutionDate.toLocaleString()}.`)
             .addFooter('Container Restart Scheduler')
             .sendMessage()
         console.log('Startup discord notification sent.')

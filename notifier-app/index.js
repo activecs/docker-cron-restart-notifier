@@ -5,27 +5,17 @@ const slackNotification = require('./slackNotification')
 const discordNotification = require('./discordNotification')
 
 async function main() {
-  validateWebhooksURL()
   const { containers, cronExpression, cyclePeriod } = getEnvironmentVariables()
   if (!containers.length || !cronExpression) {
     console.error('Missing required environment variables: RESTART_CONTAINERS, CRON_SCHEDULE')
     process.exit(1)
   }
-  if (getArguments().SEND_NEXT_EXECUTION_NOTIFICATION) {
-    await sendNextExecutionNotification(cronExpression)
-  } else {
-    const cycleLimiter = new Queue(1, cyclePeriod)
-    await restartContainersAndNotify(containers, cycleLimiter)
+  if (getArguments().SEND_ONLY_NEXT_SCHEDULED_EXECUTION_TIME_NOTIFICATION) {
+    await sendNextExecutionNotification(containers, cronExpression)
+    return
   }
-}
-
-function validateWebhooksURL() {
-  if(!discordNotification.validateWebhookUrl()) {
-    console.warn('Invalid Discord webhook URL, it should be in the format: https://discord.com/api/webhooks/1234567890/abc123')
-  }
-  if(!slackNotification.validateWebhookUrl()) {
-    console.warn('Invalid Slack webhook URL, it should be in the format: https://hooks.slack.com/services/1234567890/abc123')
-  }
+  const cycleLimiter = new Queue(1, cyclePeriod)
+  await restartContainersAndNotify(containers, cycleLimiter)
 }
 
 function getEnvironmentVariables() {
@@ -79,10 +69,10 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   await slackNotification.sendRestartNotification(containerName, success, executionTime, output)
 }
 
-async function sendNextExecutionNotification(cronExpression) {
+async function sendNextExecutionNotification(containers, cronExpression) {
   const nextExecutionDate = getNextExecutionDate(cronExpression)
-  await discordNotification.sendNextExecutionNotification(nextExecutionDate)
-  await slackNotification.sendNextExecutionNotification(nextExecutionDate)
+  await discordNotification.sendNextExecutionNotification(containers, nextExecutionDate)
+  await slackNotification.sendNextExecutionNotification(containers, nextExecutionDate)
 }
 
 function getNextExecutionDate(cronExpression) {
