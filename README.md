@@ -31,7 +31,6 @@ docker run -d \
 
 ## Sample docker-compose.yml
 ```yaml
-version: "3.4"
 
 services:
   restart-notifier:
