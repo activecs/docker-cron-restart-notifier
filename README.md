@@ -1,5 +1,6 @@
 # Docker Image for Scheduled Container Restart with Discord/Slack Notifications
 ![build workflow](https://github.com/activecs/docker-cron-restart-notifier/actions/workflows/merge-or-push-to-main.yml/badge.svg)
+[![Create Github release](https://github.com/activecs/docker-cron-restart-notifier/actions/workflows/release.yml/badge.svg)](https://github.com/activecs/docker-cron-restart-notifier/actions/workflows/release.yml)
 ## Overview
 This Docker image is designed to automatically restart specified Docker containers and send notifications to a Discord channel or/and Slack channel upon each restart. It's particularly useful for maintaining long-running services, ensuring they're periodically refreshed and stakeholders are informed of these actions.
 
