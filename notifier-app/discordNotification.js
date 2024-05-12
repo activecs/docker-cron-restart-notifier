@@ -7,7 +7,7 @@ function getEnvironmentVariables() {
 
 function validateWebhookUrl() {
     const { discordWebhookUrl } = getEnvironmentVariables()
-    const discordWebhookURLPattern = /^https:\/\/discord\.com\/api\/webhooks\/\d+\/\w+$/
+    const discordWebhookURLPattern = /^https:\/\/discord\.com\/api\/webhooks\/.+/
     return discordWebhookURLPattern.test(discordWebhookUrl)
 }
 
