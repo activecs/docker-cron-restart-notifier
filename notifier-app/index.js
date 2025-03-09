@@ -11,7 +11,7 @@ async function main() {
     process.exit(1)
   }
   if (getArguments().SEND_ONLY_NEXT_SCHEDULED_EXECUTION_TIME_NOTIFICATION) {
-    await sendNextExecutionNotification(containers, cronExpression)
+  await sendNextExecutionNotification(containers, cronExpression)
     return
   }
   const cycleLimiter = new Queue(1, cyclePeriod)
@@ -40,9 +40,9 @@ async function restartContainersAndNotify(containers, cycleLimiter) {
     const startTime = new Date()
     await cycleLimiter.wait(container, 0)
     await restartContainer(container)
-        .then(output => sendRestartNotification(container, true, getRestartExecutionTime(startTime), output))
-        .catch(error => sendRestartNotification(container, false, getRestartExecutionTime(startTime), error.message))
-        .finally(() => cycleLimiter.end(container))
+      .then(output => sendRestartNotification(container, true, getRestartExecutionTime(startTime), output))
+      .catch(error => sendRestartNotification(container, false, getRestartExecutionTime(startTime), error.message))
+      .finally(() => cycleLimiter.end(container))
   }
 }
 
@@ -86,7 +86,7 @@ function getNextExecutionDate(cronExpression) {
 }
 
 main()
-    .then(() => console.log("Done"))
-    .catch((ex) => console.log(ex.message));
+  .then(() => console.log('Done'))
+  .catch(ex => console.log(ex.message))
 
 module.exports = { main }
