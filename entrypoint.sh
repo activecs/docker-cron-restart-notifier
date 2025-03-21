@@ -46,5 +46,5 @@ fi
 #        -d N    Set log level, log to stderr
 #        -L FILE Log to FILE
 #        -c DIR  Cron dir. Default:/var/spool/cron/crontabs
-echo "Starting cron daemon in the foreground - $CRON_SCHEDULE"
+echo "Starting cron daemon in the foreground: $CRON_SCHEDULE"
 exec crond -f -d 8
