@@ -26,8 +26,8 @@ COPY --from=builder /app /app
 # Set working directory
 WORKDIR /app
 
-# Set default cron schedule (30 days)
-ENV CRON_SCHEDULE="0 0 0 */30 * *"
+# Set default cron schedule (the 15th of each month)
+ENV CRON_SCHEDULE="0 0 0 15 * *"
 # Environment variable to control immediate execution
 ENV RUN_ON_STARTUP="false"
 
