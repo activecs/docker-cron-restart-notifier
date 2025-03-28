@@ -6,8 +6,8 @@ This Docker image is designed to automatically restart specified Docker containe
 
 ## Features
 - Automated Container Restart: Restart specified Docker containers.
-- (optional)Discord Notifications: Sends a message to a Discord channel after each container restart.
-- (optional)Slack Notifications: Sends a message to a Slack channel after each container restart.
+- (optional) Discord Notifications: Sends a message to a Discord channel after each container restart.
+- (optional) Slack Notifications: Sends a message to a Slack channel after each container restart.
 
 ## Running the Container
 Run the container with the following command:
@@ -22,7 +22,7 @@ docker run -d \
 ```
 
 ## Environment Variables
-- CRON_SCHEDULE: every 30 days by default
+- CRON_SCHEDULE: the 15th of every month, by default
 - RESTART_CONTAINERS: A comma-separated list of container names to be restarted.
 - CYCLE_PERIOD: delay between container restarts, 10000ms (10 sec) by default
 - RUN_ON_STARTUP: control immediate execution, false by default
