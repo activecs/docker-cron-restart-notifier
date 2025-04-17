@@ -18,7 +18,7 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   const { discordWebhookUrl } = getEnvironmentVariables()
   const discordNotification = new DiscordNotification('restart-notifier', discordWebhookUrl)
   const message = success ? discordNotification.sucessfulMessage() : discordNotification.errorMessage()
-  const formattedOutput = output ? `\`\`\`\n${output}\n\`\`\`` : 'No output available';
+  const formattedOutput = output ? `> ${output.replace(/\n/g, '\n> ')}` : 'No output available';
   
   try {
     await message
@@ -32,7 +32,10 @@ async function sendRestartNotification(containerName, success, executionTime, ou
       .sendMessage()
     console.log(`Discord notification sent for ${containerName}, output: ${output}`)
   } catch (error) {
-    console.error(`Error sending Discord notification for ${containerName}: ${error}`)
+    console.error(`Error sending Discord notification for ${containerName}`, error)
+    if (error.response) {
+      console.error('Discord API Response:', error.response)
+    }
   }
 }
 
@@ -60,7 +63,10 @@ async function sendNextExecutionNotification(containers, nextExecutionDate) {
       .sendMessage()
     console.log('Startup discord notification sent.')
   } catch (error) {
-    console.error(`Error discord sending startup notification: ${error}`)
+    console.error(`Error discord sending startup notification`, error)
+    if (error.response) {
+      console.error('Discord API Response:', error.response)
+    }
   }
 }
 

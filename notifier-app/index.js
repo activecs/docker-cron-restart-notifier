@@ -52,7 +52,7 @@ function getRestartExecutionTime(startTime) {
 
 async function restartContainer(containerName) {
   return new Promise((resolve, reject) => {
-    exec(`docker restart ${containerName} && sleep 2 && docker ps | grep ${containerName}`, (error, stdout, stderr) => {
+    exec(`docker restart ${containerName}  && docker ps | grep ${containerName}`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error restarting container ${containerName}:`, stderr)
         reject(error)
@@ -65,8 +65,18 @@ async function restartContainer(containerName) {
 }
 
 async function sendRestartNotification(containerName, success, executionTime, output) {
-  await discordNotification.sendRestartNotification(containerName, success, executionTime, output)
-  await slackNotification.sendRestartNotification(containerName, success, executionTime, output)
+  let sanitizedOutput = sanitizeOutput(output)
+  await discordNotification.sendRestartNotification(containerName, success, executionTime, sanitizedOutput)
+  await slackNotification.sendRestartNotification(containerName, success, executionTime, sanitizedOutput)
+}
+
+/**
+ * Sanitizes command output by removing control characters and limiting length
+ * @param {string} output - The command output to sanitize
+ * @returns {string} The sanitized output, or empty string if input is invalid
+ */
+function sanitizeOutput(output) {
+  return (output || '').replace(/[\x00-\x1F\x7F-\x9F]/g, '').slice(0, 1024)
 }
 
 async function sendNextExecutionNotification(containers, cronExpression) {
