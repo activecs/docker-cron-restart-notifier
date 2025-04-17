@@ -25,7 +25,7 @@ This Docker image is designed to automatically restart specified Docker containe
 TBA
 ### Next Execution Schedule
 #### Discord
-![Discord Schedule Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/discord-schedule.png)
+![Discord Schedule Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/discord-scheduled.png)
 #### Slack
 TBA
 
