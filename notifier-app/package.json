@@ -10,9 +10,9 @@
     "@penseapp/discord-notification": "^2.0.9",
     "@slack/webhook": "^7.0.2",
     "async-await-queue": "2.1.4",
-    "child_process": "^1.0.2",
     "cron-parser": "^4.9.0",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "dockerode": "^4.0.5"
   },
   "devDependencies": {
     "eslint-config-prettier": "^9.0.0",

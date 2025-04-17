@@ -1,29 +1,30 @@
 const { Queue } = require('async-await-queue')
-const { exec } = require('child_process')
 const cronParser = require('cron-parser')
 const slackNotification = require('./slackNotification')
 const discordNotification = require('./discordNotification')
+const Docker = require('dockerode')
 
 async function main() {
-  const { containers, cronExpression, cyclePeriod } = getEnvironmentVariables()
+  const { containers, cronExpression, cyclePeriod, dockerHost } = getEnvironmentVariables()
   if (!containers.length || !cronExpression) {
     console.error('Missing required environment variables: RESTART_CONTAINERS, CRON_SCHEDULE')
     process.exit(1)
   }
   if (getArguments().SEND_ONLY_NEXT_SCHEDULED_EXECUTION_TIME_NOTIFICATION) {
-  await sendNextExecutionNotification(containers, cronExpression)
+    await sendNextExecutionNotification(containers, cronExpression)
     return
   }
   const cycleLimiter = new Queue(1, cyclePeriod)
-  await restartContainersAndNotify(containers, cycleLimiter)
+  const docker = createDockerClient(dockerHost)
+  await restartContainersAndNotify(containers, cycleLimiter, docker)
 }
 
 function getEnvironmentVariables() {
   const containers = process.env.RESTART_CONTAINERS ? process.env.RESTART_CONTAINERS.split(',') : []
   const cronExpression = process.env.CRON_SCHEDULE
   const cyclePeriod = process.env.CYCLE_PERIOD || 10000
-
-  return { containers, cronExpression, cyclePeriod }
+  const dockerHost = process.env.DOCKER_HOST
+  return { containers, cronExpression, cyclePeriod, dockerHost }
 }
 
 function getArguments() {
@@ -35,11 +36,24 @@ function getArguments() {
   return args
 }
 
-async function restartContainersAndNotify(containers, cycleLimiter) {
+function createDockerClient(dockerHost) {
+  if (dockerHost) {
+    return new Docker({
+      host: dockerHost
+    })
+  } else {
+    // Fallback to direct socket access
+    return new Docker({
+      socketPath: '/var/run/docker.sock'
+    })
+  }
+}
+
+async function restartContainersAndNotify(containers, cycleLimiter, docker) {
   for (const container of containers) {
     const startTime = new Date()
     await cycleLimiter.wait(container, 0)
-    await restartContainer(container)
+    await restartContainer(docker, container)
       .then(output => sendRestartNotification(container, true, getRestartExecutionTime(startTime), output))
       .catch(error => sendRestartNotification(container, false, getRestartExecutionTime(startTime), error.message))
       .finally(() => cycleLimiter.end(container))
@@ -50,33 +64,37 @@ function getRestartExecutionTime(startTime) {
   return new Date() - startTime
 }
 
-async function restartContainer(containerName) {
-  return new Promise((resolve, reject) => {
-    exec(`docker restart ${containerName}  && docker ps | grep ${containerName}`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error restarting container ${containerName}:`, stderr)
-        reject(error)
-      } else {
-        console.log(`Container ${containerName} restarted successfully.`)
-        resolve(stdout)
-      }
-    })
-  })
+/**
+ * Restarts a Docker container and returns its status
+ * @param {Docker} docker - Docker client instance
+ * @param {string} containerName - Name of the container to restart
+ * @returns {Promise<string>} Status message of the container
+ * @throws {Error} If container restart fails
+ */
+async function restartContainer(docker, containerName) {
+  const container = docker.getContainer(containerName)
+  try {
+    await container.inspect()
+  } catch (error) {
+    throw new Error(`Container ${containerName} not found: ${error.message}`)
+  }
+  try {
+    // stop container with timeout 60 seconds
+    await container.stop({ t: 60 })
+    console.log(`Container ${containerName} stopped successfully`)
+    await container.start()
+    console.log(`Container ${containerName} started successfully`)
+    const info = await container.inspect()
+    return `Container ${containerName} restarted successfully. Status: ${info.State.Status}`
+  } catch (error) {
+    console.error(`Error restarting container ${containerName}:`, error.message)
+    throw error
+  }
 }
 
 async function sendRestartNotification(containerName, success, executionTime, output) {
-  let sanitizedOutput = sanitizeOutput(output)
-  await discordNotification.sendRestartNotification(containerName, success, executionTime, sanitizedOutput)
-  await slackNotification.sendRestartNotification(containerName, success, executionTime, sanitizedOutput)
-}
-
-/**
- * Sanitizes command output by removing control characters and limiting length
- * @param {string} output - The command output to sanitize
- * @returns {string} The sanitized output, or empty string if input is invalid
- */
-function sanitizeOutput(output) {
-  return (output || '').replace(/[\x00-\x1F\x7F-\x9F]/g, '').slice(0, 1024)
+  await discordNotification.sendRestartNotification(containerName, success, executionTime, output)
+  await slackNotification.sendRestartNotification(containerName, success, executionTime, output)
 }
 
 async function sendNextExecutionNotification(containers, cronExpression) {

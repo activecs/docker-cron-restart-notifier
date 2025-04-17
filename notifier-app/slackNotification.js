@@ -18,20 +18,70 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   const { slackWebhookUrl } = getEnvironmentVariables()
   const webhook = new IncomingWebhook(slackWebhookUrl)
 
-  const title = 'Cron Restart Container'
-  const status = success ? 'Successfully restarted' : 'Failed to restart'
-  const text = `The scheduled restart task for Docker container *${containerName}* has been executed.\n*Status:* ${status}\n*Output:* ${output}\n*Total execution time:* ${executionTime} ms`
+  const statusEmoji = success ? '✅' : '❌'
+  const statusText = success ? 'Successfully restarted' : 'Failed to restart'
+  const formattedOutput = output ? `\`\`\`${output}\`\`\`` : 'No output available'
 
   try {
     await webhook.send({
-      text: title,
+      text: 'Cron Restart Container',
       blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: 'Cron Restart Container',
+            emoji: true
+          }
+        },
         {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text
+            text: 'The scheduled restart task for Docker container has been executed.'
           }
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Container*\n• ${containerName}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Status*\n${statusEmoji} ${statusText}`
+            }
+          ]
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Time*\n<!date^${Math.floor(Date.now() / 1000)}^{date_short_pretty} at {time}|${new Date().toLocaleString()}>`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Execution Time*\n${executionTime} ms`
+            }
+          ]
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Output*\n${formattedOutput}`
+          }
+        },
+        {
+          type: 'context',
+          elements: [
+            {
+              type: 'mrkdwn',
+              text: `Total execution time: ${executionTime} ms`
+            }
+          ]
         }
       ]
     })
@@ -50,23 +100,51 @@ async function sendNextExecutionNotification(containers, nextExecutionDate) {
   }
   const { slackWebhookUrl } = getEnvironmentVariables()
   if (!nextExecutionDate) {
-    console.log('Unable to determine the next execution date.')
+    console.warn('Unable to determine the next execution date.')
     return
   }
   const webhook = new IncomingWebhook(slackWebhookUrl)
-  const title = 'Container Restart Scheduled'
-  const text = `The next scheduled (${containers}) container restart is set for ${nextExecutionDate.toLocaleString()}.`
 
   try {
     await webhook.send({
-      text: title,
+      text: 'Container Restart Scheduled',
       blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: 'Container Restart Scheduled',
+            emoji: true
+          }
+        },
         {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text
+            text: 'The next container restart is scheduled.'
           }
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Containers*\n${formatContainers(containers)}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Scheduled Time*\n<!date^${Math.floor(nextExecutionDate.getTime() / 1000)}^{date_short_pretty} at {time}|${nextExecutionDate.toLocaleString()}>`
+            }
+          ]
+        },
+        {
+          type: 'context',
+          elements: [
+            {
+              type: 'mrkdwn',
+              text: 'Container Restart Scheduler'
+            }
+          ]
         }
       ]
     })
@@ -74,6 +152,10 @@ async function sendNextExecutionNotification(containers, nextExecutionDate) {
   } catch (error) {
     console.error(`Error slack sending startup notification: ${error}`)
   }
+}
+
+function formatContainers(containers) {
+  return containers.map(container => `• ${container}`).join('\n')
 }
 
 module.exports = { validateWebhookUrl, sendRestartNotification, sendNextExecutionNotification }
