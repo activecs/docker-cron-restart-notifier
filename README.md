@@ -11,6 +11,24 @@ This Docker image is designed to automatically restart specified Docker containe
 - Support for Docker Socket Proxy for enhanced security
 - Configurable execution timing and intervals
 
+## Notification Examples
+### Successful Container Restart
+#### Discord
+![Discord Success Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/discord-success.png)
+#### Slack
+![Slack Success Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/slack-success.png)
+
+### Failed Container Restart
+#### Discord
+![Discord Error Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/discord-error.png)
+#### Slack
+TBA
+### Next Execution Schedule
+#### Discord
+![Discord Schedule Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/discord-schedule.png)
+#### Slack
+TBA
+
 ## Configuration
 
 ### Environment Variables
@@ -79,20 +97,3 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 ```
-
-## Usage
-
-1. Configure the environment variables
-2. Choose your preferred Docker connection method
-3. Start the container
-
-## Security Considerations
-
-- When using direct socket access, the container has full access to the Docker daemon
-- Using Docker Socket Proxy is recommended for production environments
-- The proxy allows fine-grained control over Docker API access
-- Socket proxy configuration should be done according to your security requirements
-
-## License
-
-MIT
