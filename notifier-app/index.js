@@ -79,13 +79,15 @@ async function restartContainer(docker, containerName) {
     throw new Error(`Container ${containerName} not found: ${error.message}`)
   }
   try {
-    // stop container with timeout 60 seconds
-    await container.stop({ t: 60 })
-    console.log(`Container ${containerName} stopped successfully`)
+    const infoBefore = await container.inspect()
+    if (infoBefore.State.Status === 'running' || infoBefore.State.Status === 'restarting' || infoBefore.State.Status === 'paused') {
+      await container.stop({ t: 60 })
+      console.log(`Container ${containerName} stopped successfully`)
+    }
     await container.start()
     console.log(`Container ${containerName} started successfully`)
-    const info = await container.inspect()
-    return `Container ${containerName} restarted successfully. Status: ${info.State.Status}`
+    const infoAfter = await container.inspect()
+    return `Container ${containerName} restarted successfully.\nStatus before: ${infoBefore.State.Status}\nStatus after: ${infoAfter.State.Status}`
   } catch (error) {
     console.error(`Error restarting container ${containerName}:`, error.message)
     throw error
