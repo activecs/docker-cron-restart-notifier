@@ -8,6 +8,64 @@ This Docker image is designed to automatically restart specified Docker containe
 - Automated Container Restart: Restart specified Docker containers.
 - (optional) Discord Notifications: Sends a message to a Discord channel after each container restart.
 - (optional) Slack Notifications: Sends a message to a Slack channel after each container restart.
+- Support for Docker Socket Proxy for enhanced security
+- Configurable execution timing and intervals
+
+## Notification Examples
+### Successful Container Restart
+#### Discord
+![Discord Success Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/discord-success.png)
+#### Slack
+![Slack Success Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/slack-success.png)
+
+### Failed Container Restart
+#### Discord
+![Discord Error Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/discord-error.png)
+#### Slack
+TBA
+### Next Execution Schedule
+#### Discord
+![Discord Schedule Notification](https://raw.githubusercontent.com/activecs/docker-cron-restart-notifier/main/docs/discord-schedule.png)
+#### Slack
+TBA
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DISCORD_WEBHOOK_URL` | Discord webhook URL for notifications | - |
+| `SLACK_WEBHOOK_URL` | Slack webhook URL for notifications | - |
+| `RESTART_CONTAINERS` | Comma-separated list of container names to restart | - |
+| `RUN_ON_STARTUP` | Whether to run on container startup | `false` |
+| `CRON_SCHEDULE` | Cron expression for scheduling restarts | `0 4 * * FRI` |
+| `CYCLE_PERIOD` | Time between container restarts (ms) | `10000` |
+| `DOCKER_HOST` | Docker daemon connection URL (optional) | - |
+
+### Docker Connection Options
+
+The application supports two ways to connect to the Docker daemon:
+
+1. **Direct Socket Access (Default)**
+   - Uses the Docker socket at `/var/run/docker.sock`
+   - Requires mounting the socket in the container
+   - Example Docker Compose configuration:
+     ```yaml
+     volumes:
+       - /var/run/docker.sock:/var/run/docker.sock
+     ```
+
+2. **Docker Socket Proxy (Optional)**
+   - Uses a secure proxy to access the Docker API
+   - Requires the [Docker Socket Proxy](https://github.com/Tecnativa/docker-socket-proxy) service
+   - Example Docker Compose configuration:
+     ```yaml
+     environment:
+       DOCKER_HOST: 'tcp://docker-socket-proxy:2375'
+     networks:
+       - docker-socket-proxy
+     ```
 
 ## Running the Container
 Run the container with the following command:
@@ -20,14 +78,6 @@ docker run -d \
   -v /var/run/docker.sock:/var/run/docker.sock \
   index.docker.io/deduard/tools:restart-notifier-latest
 ```
-
-## Environment Variables
-- CRON_SCHEDULE: the 15th of every month, by default
-- RESTART_CONTAINERS: A comma-separated list of container names to be restarted.
-- CYCLE_PERIOD: delay between container restarts, 10000ms (10 sec) by default
-- RUN_ON_STARTUP: control immediate execution, false by default
-- DISCORD_WEBHOOK_URL: The webhook URL for sending notifications to Discord.
-- SLACK_WEBHOOK_URL: The webhook URL for sending notifications to Slack.
 
 ## Sample docker-compose.yml
 ```yaml

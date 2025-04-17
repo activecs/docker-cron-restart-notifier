@@ -18,14 +18,18 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   const { discordWebhookUrl } = getEnvironmentVariables()
   const discordNotification = new DiscordNotification('restart-notifier', discordWebhookUrl)
   const message = success ? discordNotification.sucessfulMessage() : discordNotification.errorMessage()
-  const formattedOutput = output ? `> ${output.replace(/\n/g, '\n> ')}` : 'No output available';
-  
+  const formattedOutput = output ? `> ${output.replace(/\n/g, '\n> ')}` : 'No output available'
+
   try {
     await message
       .addTitle('Cron Restart Container')
       .addDescription(`The scheduled restart task for Docker container has been executed.`)
       .addField({ name: 'Container', value: formatContainers([containerName]), inline: false })
-      .addField({ name: 'Status', value: success ? '✅ Successfully restarted' : '❌ Failed to restart', inline: false })
+      .addField({
+        name: 'Status',
+        value: success ? '✅ Successfully restarted' : '❌ Failed to restart',
+        inline: false
+      })
       .addField({ name: 'Time', value: toDiscordTimestamp(new Date()), inline: false })
       .addField({ name: 'Output', value: formattedOutput, inline: false })
       .addFooter(`Total execution time: ${executionTime} ms`)
@@ -71,7 +75,7 @@ async function sendNextExecutionNotification(containers, nextExecutionDate) {
 }
 
 function formatContainers(containers) {
-  return containers.map(container => `• ${container}`).join('\n');
+  return containers.map(container => `• ${container}`).join('\n')
 }
 
 function toDiscordTimestamp(date) {
