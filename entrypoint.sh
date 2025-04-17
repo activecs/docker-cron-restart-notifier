@@ -10,7 +10,7 @@
 
 # Setup cron job
 touch crontab.tmp \
-  && echo "$CRON_SCHEDULE cd /app && node index.js >> /cron.log 2>&1 " > crontab.tmp \
+  && echo "$CRON_SCHEDULE cd /app && node index.js >> /var/log/restart-notifier/cron.log 2>&1 " > crontab.tmp \
   && crontab crontab.tmp \
   && rm -rf crontab.tmp
 
