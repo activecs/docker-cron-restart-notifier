@@ -42,6 +42,7 @@ TBA
 | `CRON_SCHEDULE` | Cron expression for scheduling restarts | `0 4 * * FRI` |
 | `CYCLE_PERIOD` | Time between container restarts (ms) | `10000` |
 | `DOCKER_HOST` | Docker daemon connection URL (optional) | - |
+| `TZ` | TimeZone (optional) | `UTC` |
 
 ### Docker Connection Options
 

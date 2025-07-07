@@ -18,6 +18,9 @@ RUN ls -la /app/*
 # Stage 2: Setup the final image
 FROM node:alpine
 
+# Install TimeZone info
+RUN apk add --no-cache tzdata
+
 # Install Docker CLI
 RUN apk add --no-cache docker-cli
 # Copy the built Node.js application from the builder stage
