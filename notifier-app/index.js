@@ -80,7 +80,11 @@ async function restartContainer(docker, containerName) {
   }
   try {
     const infoBefore = await container.inspect()
-    if (infoBefore.State.Status === 'running' || infoBefore.State.Status === 'restarting' || infoBefore.State.Status === 'paused') {
+    if (
+      infoBefore.State.Status === 'running' ||
+      infoBefore.State.Status === 'restarting' ||
+      infoBefore.State.Status === 'paused'
+    ) {
       await container.stop({ t: 60 })
       console.log(`Container ${containerName} stopped successfully`)
     }
@@ -94,6 +98,27 @@ async function restartContainer(docker, containerName) {
   }
 }
 
+/**
+ * Checks which containers exist and returns their status
+ * @param {Docker} docker - Docker client instance
+ * @param {string[]} containerNames - Array of container names to check
+ * @returns {Promise<Array>} Array of objects with container name and existence status
+ */
+async function checkContainerExistence(docker, containerNames) {
+  const statuses = []
+
+  for (const containerName of containerNames) {
+    const container = docker.getContainer(containerName)
+    try {
+      await container.inspect()
+      statuses.push({ name: containerName, exists: true })
+    } catch (error) {
+      statuses.push({ name: containerName, exists: false })
+    }
+  }
+  return statuses
+}
+
 async function sendRestartNotification(containerName, success, executionTime, output) {
   await discordNotification.sendRestartNotification(containerName, success, executionTime, output)
   await slackNotification.sendRestartNotification(containerName, success, executionTime, output)
@@ -101,8 +126,14 @@ async function sendRestartNotification(containerName, success, executionTime, ou
 
 async function sendNextExecutionNotification(containers, cronExpression) {
   const nextExecutionDate = getNextExecutionDate(cronExpression)
-  await discordNotification.sendNextExecutionNotification(containers, nextExecutionDate)
-  await slackNotification.sendNextExecutionNotification(containers, nextExecutionDate)
+  const { dockerHost } = getEnvironmentVariables()
+  const docker = createDockerClient(dockerHost)
+
+  // Check container existence
+  const containerStatuses = await checkContainerExistence(docker, containers)
+
+  await discordNotification.sendNextExecutionNotification(containerStatuses, nextExecutionDate)
+  await slackNotification.sendNextExecutionNotification(containerStatuses, nextExecutionDate)
 }
 
 function getNextExecutionDate(cronExpression) {
