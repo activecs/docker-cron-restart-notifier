@@ -43,7 +43,7 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   }
 }
 
-async function sendNextExecutionNotification(containers, nextExecutionDate) {
+async function sendNextExecutionNotification(containerStatuses, nextExecutionDate) {
   if (!validateWebhookUrl()) {
     console.warn(
       'Invalid Discord webhook URL, it should be in the format: https://discord.com/api/webhooks/1234567890/abc123'
@@ -61,7 +61,7 @@ async function sendNextExecutionNotification(containers, nextExecutionDate) {
       .sucessfulMessage()
       .addTitle('Container Restart Scheduled')
       .addDescription(`The next container restart is scheduled.`)
-      .addField({ name: 'Containers', value: formatContainers(containers), inline: false })
+      .addField({ name: 'Containers', value: formatContainersWithStatus(containerStatuses), inline: false })
       .addField({ name: 'Scheduled Time', value: toDiscordTimestamp(nextExecutionDate), inline: false })
       .addFooter('Container Restart Scheduler')
       .sendMessage()
@@ -76,6 +76,16 @@ async function sendNextExecutionNotification(containers, nextExecutionDate) {
 
 function formatContainers(containers) {
   return containers.map(container => `• ${container}`).join('\n')
+}
+
+function formatContainersWithStatus(containerStatuses) {
+  return containerStatuses
+    .map(status => {
+      const statusIcon = status.exists ? '✅' : '❌'
+      const statusText = status.exists ? '' : ' (not found)'
+      return `• ${statusIcon} ${status.name}${statusText}`
+    })
+    .join('\n')
 }
 
 function toDiscordTimestamp(date) {

@@ -91,7 +91,7 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   }
 }
 
-async function sendNextExecutionNotification(containers, nextExecutionDate) {
+async function sendNextExecutionNotification(containerStatuses, nextExecutionDate) {
   if (!validateWebhookUrl()) {
     console.warn(
       'Invalid Slack webhook URL, it should be in the format: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'
@@ -129,11 +129,13 @@ async function sendNextExecutionNotification(containers, nextExecutionDate) {
           fields: [
             {
               type: 'mrkdwn',
-              text: `*Containers*\n${formatContainers(containers)}`
+              text: `*Containers*\n${formatContainersWithStatus(containerStatuses)}`
             },
             {
               type: 'mrkdwn',
-              text: `*Scheduled Time*\n<!date^${Math.floor(nextExecutionDate.getTime() / 1000)}^{date_short_pretty} at {time}|${nextExecutionDate.toLocaleString()}>`
+              text: `*Scheduled Time*\n<!date^${Math.floor(
+                nextExecutionDate.getTime() / 1000
+              )}^{date_short_pretty} at {time}|${nextExecutionDate.toLocaleString()}>`
             }
           ]
         },
@@ -154,8 +156,14 @@ async function sendNextExecutionNotification(containers, nextExecutionDate) {
   }
 }
 
-function formatContainers(containers) {
-  return containers.map(container => `• ${container}`).join('\n')
+function formatContainersWithStatus(containerStatuses) {
+  return containerStatuses
+    .map(status => {
+      const statusIcon = status.exists ? '✅' : '❌'
+      const statusText = status.exists ? '' : ' (not found)'
+      return `• ${statusIcon} ${status.name}${statusText}`
+    })
+    .join('\n')
 }
 
 module.exports = { validateWebhookUrl, sendRestartNotification, sendNextExecutionNotification }
