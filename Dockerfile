@@ -1,5 +1,5 @@
 # Stage 1: Build the Node.js application
-FROM node:latest AS builder
+FROM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -16,7 +16,7 @@ COPY notifier-app/ .
 RUN ls -la /app/*
 
 # Stage 2: Setup the final image
-FROM node:alpine
+FROM node:20-alpine
 
 # Install TimeZone info
 RUN apk add --no-cache tzdata
