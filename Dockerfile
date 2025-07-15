@@ -18,11 +18,8 @@ RUN ls -la /app/*
 # Stage 2: Setup the final image
 FROM node:20-alpine
 
-# Install TimeZone info
-RUN apk add --no-cache tzdata
-
-# Install Docker CLI
-RUN apk add --no-cache docker-cli
+# Install Docker CLI, TimeZone info
+RUN apk add --no-cache docker-cli tzdata
 # Copy the built Node.js application from the builder stage
 COPY --from=builder /app /app
 
@@ -32,6 +29,8 @@ WORKDIR /app
 # Create log directory
 RUN mkdir -p /var/log/restart-notifier
 
+# Set default timezone to UTC
+ENV TZ=UTC
 # Set default cron schedule (the 15th of each month)
 ENV CRON_SCHEDULE="0 0 0 15 * *"
 # Environment variable to control immediate execution
