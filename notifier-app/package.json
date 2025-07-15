@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@penseapp/discord-notification": "^2.0.9",
-    "@slack/webhook": "^7.0.2",
+    "@slack/webhook": "^7.0.5",
     "async-await-queue": "2.1.4",
     "cron-parser": "^4.9.0",
     "dotenv": "^16.4.7",
