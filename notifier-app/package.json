@@ -12,7 +12,7 @@
     "async-await-queue": "2.1.4",
     "cron-parser": "^4.9.0",
     "dotenv": "^16.4.7",
-    "dockerode": "^4.0.5"
+    "dockerode": "^4.0.8"
   },
   "devDependencies": {
     "eslint-config-prettier": "^9.0.0",
