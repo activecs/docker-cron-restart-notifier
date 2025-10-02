@@ -1,6 +1,6 @@
 {
   "name": "docker-restart-app",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
