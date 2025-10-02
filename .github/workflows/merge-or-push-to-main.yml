@@ -1,8 +1,8 @@
 name: Merge or push to main workflow
 
 on:
-  workflow_dispatch:
-  push:
+  pull_request:
+    types: [closed]
     branches: ["main"]
     paths-ignore:
       - 'README.md'
@@ -12,6 +12,7 @@ jobs:
   build-test-image:
     name: Build test image
     runs-on: self-hosted
+    if: github.event.pull_request.merged == true
     outputs:
       date: ${{ steps.date.outputs.date }}
     steps:
