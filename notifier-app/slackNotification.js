@@ -11,7 +11,7 @@ function validateWebhookUrl() {
   return slackWebhookURLPattern.test(slackWebhookUrl)
 }
 
-async function sendRestartNotification(containerName, success, executionTime, output) {
+async function sendRestartNotification(containerName, success, executionTime, output, hostIdentifier) {
   if (!validateWebhookUrl()) {
     return
   }
@@ -46,8 +46,17 @@ async function sendRestartNotification(containerName, success, executionTime, ou
           fields: [
             {
               type: 'mrkdwn',
-              text: `*Container*\n• ${containerName}`
+              text: `*Host*\n${hostIdentifier}`
             },
+            {
+              type: 'mrkdwn',
+              text: `*Container*\n• ${containerName}`
+            }
+          ]
+        },
+        {
+          type: 'section',
+          fields: [
             {
               type: 'mrkdwn',
               text: `*Status*\n${statusEmoji} ${statusText}`
@@ -91,7 +100,7 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   }
 }
 
-async function sendNextExecutionNotification(containerStatuses, nextExecutionDate) {
+async function sendNextExecutionNotification(containerStatuses, nextExecutionDate, hostIdentifier) {
   if (!validateWebhookUrl()) {
     console.warn(
       'Invalid Slack webhook URL, it should be in the format: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'
@@ -129,8 +138,17 @@ async function sendNextExecutionNotification(containerStatuses, nextExecutionDat
           fields: [
             {
               type: 'mrkdwn',
-              text: `*Containers*\n${formatContainersWithStatus(containerStatuses)}`
+              text: `*Host*\n${hostIdentifier}`
             },
+            {
+              type: 'mrkdwn',
+              text: `*Containers*\n${formatContainersWithStatus(containerStatuses)}`
+            }
+          ]
+        },
+        {
+          type: 'section',
+          fields: [
             {
               type: 'mrkdwn',
               text: `*Scheduled Time*\n<!date^${Math.floor(

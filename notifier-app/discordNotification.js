@@ -11,7 +11,7 @@ function validateWebhookUrl() {
   return discordWebhookURLPattern.test(discordWebhookUrl)
 }
 
-async function sendRestartNotification(containerName, success, executionTime, output) {
+async function sendRestartNotification(containerName, success, executionTime, output, hostIdentifier) {
   if (!validateWebhookUrl()) {
     return
   }
@@ -24,7 +24,8 @@ async function sendRestartNotification(containerName, success, executionTime, ou
     await message
       .addTitle('Cron Restart Container')
       .addDescription(`The scheduled restart task for Docker container has been executed.`)
-      .addField({ name: 'Container', value: formatContainers([containerName]), inline: false })
+      .addField({ name: 'Host', value: hostIdentifier, inline: false })
+      .addField({ name: 'Containers', value: formatContainers([containerName]), inline: false })
       .addField({
         name: 'Status',
         value: success ? '✅ Successfully restarted' : '❌ Failed to restart',
@@ -43,7 +44,7 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   }
 }
 
-async function sendNextExecutionNotification(containerStatuses, nextExecutionDate) {
+async function sendNextExecutionNotification(containerStatuses, nextExecutionDate, hostIdentifier) {
   if (!validateWebhookUrl()) {
     console.warn(
       'Invalid Discord webhook URL, it should be in the format: https://discord.com/api/webhooks/1234567890/abc123'
@@ -61,6 +62,7 @@ async function sendNextExecutionNotification(containerStatuses, nextExecutionDat
       .sucessfulMessage()
       .addTitle('Container Restart Scheduled')
       .addDescription(`The next container restart is scheduled.`)
+      .addField({ name: 'Host', value: hostIdentifier, inline: false })
       .addField({ name: 'Containers', value: formatContainersWithStatus(containerStatuses), inline: false })
       .addField({ name: 'Scheduled Time', value: toDiscordTimestamp(nextExecutionDate), inline: false })
       .addFooter('Container Restart Scheduler')

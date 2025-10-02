@@ -11,8 +11,9 @@
     "@slack/webhook": "^7.0.5",
     "async-await-queue": "2.1.4",
     "cron-parser": "^4.9.0",
+    "dockerode": "^4.0.5",
     "dotenv": "^16.4.7",
-    "dockerode": "^4.0.5"
+    "os": "^0.1.2"
   },
   "devDependencies": {
     "eslint-config-prettier": "^9.0.0",

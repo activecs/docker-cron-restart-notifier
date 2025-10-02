@@ -3,6 +3,7 @@ const cronParser = require('cron-parser')
 const slackNotification = require('./slackNotification')
 const discordNotification = require('./discordNotification')
 const Docker = require('dockerode')
+const os = require('os')
 
 async function main() {
   const { containers, cronExpression, cyclePeriod, dockerHost } = getEnvironmentVariables()
@@ -25,6 +26,10 @@ function getEnvironmentVariables() {
   const cyclePeriod = process.env.CYCLE_PERIOD || 10000
   const dockerHost = process.env.DOCKER_HOST
   return { containers, cronExpression, cyclePeriod, dockerHost }
+}
+
+function getHostIdentifier() {
+  return process.env.IDENTIFIER || os.hostname()
 }
 
 function getArguments() {
@@ -120,8 +125,9 @@ async function checkContainerExistence(docker, containerNames) {
 }
 
 async function sendRestartNotification(containerName, success, executionTime, output) {
-  await discordNotification.sendRestartNotification(containerName, success, executionTime, output)
-  await slackNotification.sendRestartNotification(containerName, success, executionTime, output)
+  const hostIdentifier = getHostIdentifier()
+  await discordNotification.sendRestartNotification(containerName, success, executionTime, output, hostIdentifier)
+  await slackNotification.sendRestartNotification(containerName, success, executionTime, output, hostIdentifier)
 }
 
 async function sendNextExecutionNotification(containers, cronExpression) {
@@ -131,9 +137,10 @@ async function sendNextExecutionNotification(containers, cronExpression) {
 
   // Check container existence
   const containerStatuses = await checkContainerExistence(docker, containers)
+  const hostIdentifier = getHostIdentifier()
 
-  await discordNotification.sendNextExecutionNotification(containerStatuses, nextExecutionDate)
-  await slackNotification.sendNextExecutionNotification(containerStatuses, nextExecutionDate)
+  await discordNotification.sendNextExecutionNotification(containerStatuses, nextExecutionDate, hostIdentifier)
+  await slackNotification.sendNextExecutionNotification(containerStatuses, nextExecutionDate, hostIdentifier)
 }
 
 function getNextExecutionDate(cronExpression) {
