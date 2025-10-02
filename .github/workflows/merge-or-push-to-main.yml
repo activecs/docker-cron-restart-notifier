@@ -66,9 +66,10 @@ jobs:
     permissions:
       contents: write
     outputs:
-      new_version: ${{ steps.bump_version.outputs.new_tag }}
-      new_version_major: ${{ steps.bump_version.outputs.part-0 }}
-      new_version_minor: ${{ steps.bump_version.outputs.part-0 }}.${{ steps.bump_version.outputs.part-1 }}
+      new_version: ${{ steps.parse_version.outputs.version }}
+      new_version_major: ${{ steps.parse_version.outputs.major }}
+      new_version_minor: ${{ steps.parse_version.outputs.minor }}
+      new_tag: ${{ steps.bump_version.outputs.new_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -84,6 +85,16 @@ jobs:
           default_bump: patch
           tag_prefix: v
           create_annotated_tag: true
+
+      - name: Parse version numbers
+        id: parse_version
+        run: |
+          VERSION=${{ steps.bump_version.outputs.new_version }}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          MINOR=$(echo $VERSION | cut -d. -f1-2)
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
 
       - name: Update package.json version
         run: |
