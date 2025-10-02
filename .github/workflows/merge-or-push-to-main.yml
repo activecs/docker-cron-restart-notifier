@@ -62,6 +62,8 @@ jobs:
     name: Version bump and release
     runs-on: self-hosted
     needs: [approval, build-test-image]
+    permissions:
+      contents: write
     outputs:
       new_version: ${{ steps.bump_version.outputs.new_tag }}
       new_version_major: ${{ steps.bump_version.outputs.part-0 }}
