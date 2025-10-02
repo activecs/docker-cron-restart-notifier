@@ -43,6 +43,7 @@ TBA
 | `CYCLE_PERIOD` | Time between container restarts (ms) | `10000` |
 | `DOCKER_HOST` | Docker daemon connection URL (optional) | - |
 | `TZ` | TimeZone (optional) | `UTC` |
+| `IDENTIFIER` | Custom identifier for this host (optional) | hostname |
 
 ### Docker Connection Options
 
@@ -76,6 +77,7 @@ docker run -d \
   -e RESTART_CONTAINERS="container1,container2" \
   -e DISCORD_WEBHOOK_URL="your_discord_webhook_url" \
   -e SLACK_WEBHOOK_URL="your_slack_webhook_url" \
+  -e IDENTIFIER="VM25" \
   -v /var/run/docker.sock:/var/run/docker.sock \
   index.docker.io/deduard/tools:restart-notifier-latest
 ```
@@ -95,6 +97,7 @@ services:
       RUN_ON_STARTUP: "false"
       CRON_SCHEDULE: "0 4 * * FRI" # Every Friday at 4:00 AM
       CYCLE_PERIOD: "10000" # 10 sec
+      IDENTIFIER: "VM25" # Optional: custom identifier for notifications
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 ```
