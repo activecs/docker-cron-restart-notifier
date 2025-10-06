@@ -1,6 +1,18 @@
 # Docker Image for Scheduled Container Restart with Discord/Slack Notifications
-![build workflow](https://github.com/activecs/docker-cron-restart-notifier/actions/workflows/merge-or-push-to-main.yml/badge.svg)
-[![Create Github release](https://github.com/activecs/docker-cron-restart-notifier/actions/workflows/release.yml/badge.svg)](https://github.com/activecs/docker-cron-restart-notifier/actions/workflows/release.yml)
+![release workflow](https://github.com/activecs/docker-cron-restart-notifier/actions/workflows/merge-or-push-to-main.yml/badge.svg)
+
+> [!IMPORTANT]
+> **New Docker Registry Available!**
+> We've moved to a dedicated Docker repository: `deduard/docker-cron-restart-notifier`
+>
+> **Recommended:** Use the new repository with semantic versioning tags:
+> - `deduard/docker-cron-restart-notifier:latest` - Latest stable release
+> - `deduard/docker-cron-restart-notifier:2` - Latest v2.x.x
+> - `deduard/docker-cron-restart-notifier:2.5` - Latest v2.5.x
+> - `deduard/docker-cron-restart-notifier:2.5.0` - Specific version
+>
+> **Legacy:** `deduard/tools:restart-notifier-latest` (still maintained but deprecated)
+
 ## Overview
 This Docker image is designed to automatically restart specified Docker containers and send notifications to a Discord channel or/and Slack channel upon each restart. It's particularly useful for maintaining long-running services, ensuring they're periodically refreshed and stakeholders are informed of these actions.
 
@@ -70,34 +82,74 @@ The application supports two ways to connect to the Docker daemon:
      ```
 
 ## Running the Container
-Run the container with the following command:
+
+### Using New Repository (Recommended)
 ```bash
 docker run -d \
   -e CRON_SCHEDULE="0 4 * * FRI" \
   -e RESTART_CONTAINERS="container1,container2" \
   -e DISCORD_WEBHOOK_URL="your_discord_webhook_url" \
   -e SLACK_WEBHOOK_URL="your_slack_webhook_url" \
-  -e IDENTIFIER="VM25" \
+  -e IDENTIFIER="Proxmox VM102" \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  index.docker.io/deduard/tools:restart-notifier-latest
+  deduard/docker-cron-restart-notifier:latest
 ```
 
-## Sample docker-compose.yml
-```yaml
+<details>
+<summary>Using Legacy Repository</summary>
 
+```bash
+docker run -d \
+  -e CRON_SCHEDULE="0 4 * * FRI" \
+  -e RESTART_CONTAINERS="container1,container2" \
+  -e DISCORD_WEBHOOK_URL="your_discord_webhook_url" \
+  -e SLACK_WEBHOOK_URL="your_slack_webhook_url" \
+  -e IDENTIFIER="Proxmox VM102" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  deduard/tools:restart-notifier-latest
+```
+</details>
+
+## Sample docker-compose.yml
+
+### Using New Repository (Recommended)
+```yaml
 services:
   restart-notifier:
     container_name: restart-notifier
-    image: index.docker.io/deduard/tools:restart-notifier-latest
+    image: deduard/docker-cron-restart-notifier:latest  # or use :2 for major version pinning
     restart: unless-stopped
     environment:
-      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/119207436456853270/mRC3HfPoT5_MFsvn3sHUuG1Qeeg3WTUAo_bf0LR8'
-      SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T04JS2CSY4U/B06HRRFSRGW/1UL9bv1i1JnaYsUBo'
-      RESTART_CONTAINERS: "nervous_moore1,nervous_moore2"
+      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN'
+      SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      RESTART_CONTAINERS: "container1,container2"
       RUN_ON_STARTUP: "false"
       CRON_SCHEDULE: "0 4 * * FRI" # Every Friday at 4:00 AM
-      CYCLE_PERIOD: "10000" # 10 sec
-      IDENTIFIER: "VM25" # Optional: custom identifier for notifications
+      CYCLE_PERIOD: "10000" # 10 seconds between container restarts
+      IDENTIFIER: "Proxmox VM102" # Custom identifier for notifications
+      TZ: "Europe/Kiev" # Optional: set timezone
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 ```
+
+<details>
+<summary>Using Legacy Repository</summary>
+
+```yaml
+services:
+  restart-notifier:
+    container_name: restart-notifier
+    image: deduard/tools:restart-notifier-latest
+    restart: unless-stopped
+    environment:
+      DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN'
+      SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      RESTART_CONTAINERS: "container1,container2"
+      RUN_ON_STARTUP: "false"
+      CRON_SCHEDULE: "0 4 * * FRI"
+      CYCLE_PERIOD: "10000"
+      IDENTIFIER: "Proxmox VM102"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+</details>
