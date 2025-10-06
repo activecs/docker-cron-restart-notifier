@@ -3,7 +3,7 @@
 
 > [!IMPORTANT]
 > **New Docker Registry Available!**
-> We've moved to a dedicated Docker repository: `deduard/docker-cron-restart-notifier`
+> I've moved to a dedicated Docker repository: [`deduard/docker-cron-restart-notifier`](https://hub.docker.com/repository/docker/deduard/docker-cron-restart-notifier/tags)
 >
 > **Recommended:** Use the new repository with semantic versioning tags:
 > - `deduard/docker-cron-restart-notifier:latest` - Latest stable release
