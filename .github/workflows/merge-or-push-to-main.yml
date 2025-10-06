@@ -114,7 +114,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.version-and-release.outputs.new_version }}
+          ref: ${{ needs.version-and-release.outputs.new_tag }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -152,7 +152,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.version-and-release.outputs.new_version }}
+          ref: ${{ needs.version-and-release.outputs.new_tag }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
