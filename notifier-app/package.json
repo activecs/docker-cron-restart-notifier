@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "@penseapp/discord-notification": "^2.0.9",
-    "@slack/webhook": "^7.0.9",
+    "@slack/webhook": "^7.1.0",
     "async-await-queue": "2.1.4",
-    "cron-parser": "^5.5.0",
-    "dockerode": "^5.0.0",
+    "cron-parser": "^5.6.1",
+    "dockerode": "^5.0.1",
     "dotenv": "^17.4.2",
     "os": "^0.1.2"
   },
@@ -19,9 +19,9 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-n": "^18.1.0",
+    "eslint-plugin-n": "^18.2.1",
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-promise": "^7.3.0",
-    "prettier": "^3.8.4"
+    "prettier": "^3.9.4"
   }
 }
