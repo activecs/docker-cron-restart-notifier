@@ -93,6 +93,9 @@ startup, and a value that is not one of the supported URLs stops the app with an
 
 ## Running the Container
 
+Images are published for `linux/amd64` and `linux/arm64`. `linux/arm/v7` (32-bit ARM) stopped at 2.5.0, because
+Node.js no longer ships official 32-bit ARM builds from Node 24 on.
+
 ### Using New Repository (Recommended)
 ```bash
 docker run -d \
