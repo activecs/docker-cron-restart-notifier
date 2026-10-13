@@ -80,6 +80,14 @@ The application supports two ways to connect to the Docker daemon:
      networks:
        - docker-socket-proxy
      ```
+   - The proxy must allow container endpoints and POST requests, since a restart is a stop and a start:
+     ```yaml
+     docker-socket-proxy:
+       image: tecnativa/docker-socket-proxy
+       environment:
+         CONTAINERS: 1
+         POST: 1
+     ```
 
 ## Running the Container
 
