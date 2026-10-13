@@ -6,17 +6,23 @@ const Docker = require('dockerode')
 const os = require('os')
 
 async function main() {
-  const { containers, cronExpression, cyclePeriod } = getEnvironmentVariables()
+  const { containers, cronExpression, cyclePeriod, dockerHost } = getEnvironmentVariables()
   if (!containers.length || !cronExpression) {
     console.error('Missing required environment variables: RESTART_CONTAINERS, CRON_SCHEDULE')
     process.exit(1)
   }
+  let docker
+  try {
+    docker = createDockerClient(dockerHost)
+  } catch (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
   if (getArguments().SEND_ONLY_NEXT_SCHEDULED_EXECUTION_TIME_NOTIFICATION) {
-    await sendNextExecutionNotification(containers, cronExpression)
+    await sendNextExecutionNotification(containers, cronExpression, docker)
     return
   }
   const cycleLimiter = new Queue(1, cyclePeriod)
-  const docker = createDockerClient()
   await restartContainersAndNotify(containers, cycleLimiter, docker)
 }
 
@@ -24,7 +30,8 @@ function getEnvironmentVariables() {
   const containers = process.env.RESTART_CONTAINERS ? process.env.RESTART_CONTAINERS.split(',') : []
   const cronExpression = process.env.CRON_SCHEDULE
   const cyclePeriod = process.env.CYCLE_PERIOD || 10000
-  return { containers, cronExpression, cyclePeriod }
+  const dockerHost = process.env.DOCKER_HOST
+  return { containers, cronExpression, cyclePeriod, dockerHost }
 }
 
 function getHostIdentifier() {
@@ -40,10 +47,46 @@ function getArguments() {
   return args
 }
 
-// Without options docker-modem reads DOCKER_HOST (tcp://, unix://, DOCKER_TLS_VERIFY, DOCKER_CERT_PATH)
-// and falls back to /var/run/docker.sock. Passing DOCKER_HOST as `host` treated the whole URL as a hostname.
-function createDockerClient() {
-  return new Docker()
+const DEFAULT_DOCKER_SOCKET = '/var/run/docker.sock'
+
+/**
+ * Builds the Docker client from DOCKER_HOST, or from the default socket when DOCKER_HOST is not set.
+ * Options are always passed explicitly, so dockerode never falls back to its own environment lookup.
+ * @param {string} [dockerHost] - unix:///path/to/docker.sock, tcp://host:port, http://host:port or https://host:port
+ * @returns {Docker} Docker client instance
+ * @throws {Error} If DOCKER_HOST is not a supported URL
+ */
+function createDockerClient(dockerHost) {
+  if (!dockerHost) {
+    console.log(`Docker API: unix://${DEFAULT_DOCKER_SOCKET} (DOCKER_HOST not set)`)
+    return new Docker({ socketPath: DEFAULT_DOCKER_SOCKET })
+  }
+  const options = parseDockerHost(dockerHost)
+  console.log(`Docker API: ${dockerHost} (DOCKER_HOST)`)
+  return new Docker(options)
+}
+
+function parseDockerHost(dockerHost) {
+  const unsupported = new Error(
+    `Unsupported DOCKER_HOST "${dockerHost}": use unix:///path/to/docker.sock, tcp://host:port, http://host:port or https://host:port`
+  )
+  let url
+  try {
+    url = new URL(dockerHost)
+  } catch {
+    throw unsupported
+  }
+  switch (url.protocol) {
+    case 'unix:':
+      return { socketPath: url.pathname }
+    case 'tcp:':
+    case 'http:':
+      return { protocol: 'http', host: url.hostname, port: url.port || 2375 }
+    case 'https:':
+      return { protocol: 'https', host: url.hostname, port: url.port || 2376 }
+    default:
+      throw unsupported
+  }
 }
 
 function describeDockerError(containerName, error) {
@@ -137,9 +180,8 @@ async function sendRestartNotification(containerName, success, executionTime, ou
   await slackNotification.sendRestartNotification(containerName, success, executionTime, output, hostIdentifier)
 }
 
-async function sendNextExecutionNotification(containers, cronExpression) {
+async function sendNextExecutionNotification(containers, cronExpression, docker) {
   const nextExecutionDate = getNextExecutionDate(cronExpression)
-  const docker = createDockerClient()
 
   // Check container existence
   const containerStatuses = await checkContainerExistence(docker, containers)
