@@ -1,4 +1,6 @@
-const { DiscordNotification } = require('@penseapp/discord-notification')
+// Embed colors kept from the @penseapp/discord-notification variants this module used before.
+const SUCCESS_COLOR = 0x00c851
+const ERROR_COLOR = 0xff4444
 
 function getEnvironmentVariables() {
   const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL
@@ -16,31 +18,25 @@ async function sendRestartNotification(containerName, success, executionTime, ou
     return
   }
   const { discordWebhookUrl } = getEnvironmentVariables()
-  const discordNotification = new DiscordNotification('restart-notifier', discordWebhookUrl)
-  const message = success ? discordNotification.sucessfulMessage() : discordNotification.errorMessage()
   const formattedOutput = output ? `> ${output.replace(/\n/g, '\n> ')}` : 'No output available'
 
   try {
-    await message
-      .addTitle('Cron Restart Container')
-      .addDescription(`The scheduled restart task for Docker container has been executed.`)
-      .addField({ name: 'Host', value: hostIdentifier, inline: false })
-      .addField({ name: 'Containers', value: formatContainers([containerName]), inline: false })
-      .addField({
-        name: 'Status',
-        value: success ? '✅ Successfully restarted' : '❌ Failed to restart',
-        inline: false
-      })
-      .addField({ name: 'Time', value: toDiscordTimestamp(new Date()), inline: false })
-      .addField({ name: 'Output', value: formattedOutput, inline: false })
-      .addFooter(`Total execution time: ${executionTime} ms`)
-      .sendMessage()
+    await sendEmbed(discordWebhookUrl, {
+      color: success ? SUCCESS_COLOR : ERROR_COLOR,
+      title: 'Cron Restart Container',
+      description: 'The scheduled restart task for Docker container has been executed.',
+      fields: [
+        { name: 'Host', value: hostIdentifier },
+        { name: 'Containers', value: formatContainers([containerName]) },
+        { name: 'Status', value: success ? '✅ Successfully restarted' : '❌ Failed to restart' },
+        { name: 'Time', value: toDiscordTimestamp(new Date()) },
+        { name: 'Output', value: formattedOutput }
+      ],
+      footer: `Total execution time: ${executionTime} ms`
+    })
     console.log(`Discord notification sent for ${containerName}, output: ${output}`)
   } catch (error) {
     console.error(`Error sending Discord notification for ${containerName}`, error)
-    if (error.response) {
-      console.error('Discord API Response:', error.response)
-    }
   }
 }
 
@@ -56,23 +52,45 @@ async function sendNextExecutionNotification(containerStatuses, nextExecutionDat
     console.log('Unable to determine the next execution date.')
     return
   }
-  const discordNotification = new DiscordNotification('restart-notifier', discordWebhookUrl)
   try {
-    await discordNotification
-      .sucessfulMessage()
-      .addTitle('Container Restart Scheduled')
-      .addDescription(`The next container restart is scheduled.`)
-      .addField({ name: 'Host', value: hostIdentifier, inline: false })
-      .addField({ name: 'Containers', value: formatContainersWithStatus(containerStatuses), inline: false })
-      .addField({ name: 'Scheduled Time', value: toDiscordTimestamp(nextExecutionDate), inline: false })
-      .addFooter('Container Restart Scheduler')
-      .sendMessage()
+    await sendEmbed(discordWebhookUrl, {
+      color: SUCCESS_COLOR,
+      title: 'Container Restart Scheduled',
+      description: 'The next container restart is scheduled.',
+      fields: [
+        { name: 'Host', value: hostIdentifier },
+        { name: 'Containers', value: formatContainersWithStatus(containerStatuses) },
+        { name: 'Scheduled Time', value: toDiscordTimestamp(nextExecutionDate) }
+      ],
+      footer: 'Container Restart Scheduler'
+    })
     console.log('Startup discord notification sent.')
   } catch (error) {
     console.error(`Error discord sending startup notification`, error)
-    if (error.response) {
-      console.error('Discord API Response:', error.response)
-    }
+  }
+}
+
+async function sendEmbed(webhookUrl, { color, title, description, fields, footer }) {
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      allowed_mentions: { parse: [] },
+      embeds: [
+        {
+          author: { name: 'restart-notifier' },
+          color,
+          title,
+          description,
+          fields: fields.map(field => ({ ...field, inline: false })),
+          footer: { text: footer }
+        }
+      ]
+    }),
+    signal: AbortSignal.timeout(10000)
+  })
+  if (!response.ok) {
+    throw new Error(`Discord API responded ${response.status}: ${await response.text()}`)
   }
 }
 
