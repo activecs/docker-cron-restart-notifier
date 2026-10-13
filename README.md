@@ -53,13 +53,15 @@ TBA
 | `RUN_ON_STARTUP` | Whether to run on container startup | `false` |
 | `CRON_SCHEDULE` | Cron expression for scheduling restarts | `0 4 * * FRI` |
 | `CYCLE_PERIOD` | Time between container restarts (ms) | `10000` |
-| `DOCKER_HOST` | Docker daemon connection URL (optional) | - |
+| `DOCKER_HOST` | Docker API endpoint: `unix:///path/to/docker.sock`, `tcp://host:port`, `http://host:port` or `https://host:port`. When set, it is always used | `unix:///var/run/docker.sock` |
 | `TZ` | TimeZone (optional) | `UTC` |
 | `IDENTIFIER` | Custom identifier for this host (optional) | hostname |
 
 ### Docker Connection Options
 
-The application supports two ways to connect to the Docker daemon:
+The application supports two ways to connect to the Docker daemon. `DOCKER_HOST` decides which one: when it is set,
+the app connects there; when it is not set, the app uses `/var/run/docker.sock`. The chosen endpoint is printed at
+startup, and a value that is not one of the supported URLs stops the app with an error.
 
 1. **Direct Socket Access (Default)**
    - Uses the Docker socket at `/var/run/docker.sock`
@@ -80,8 +82,19 @@ The application supports two ways to connect to the Docker daemon:
      networks:
        - docker-socket-proxy
      ```
+   - The proxy must allow container endpoints and POST requests, since a restart is a stop and a start:
+     ```yaml
+     docker-socket-proxy:
+       image: tecnativa/docker-socket-proxy
+       environment:
+         CONTAINERS: 1
+         POST: 1
+     ```
 
 ## Running the Container
+
+Images are published for `linux/amd64` and `linux/arm64`. `linux/arm/v7` (32-bit ARM) stopped at 2.5.0, because
+Node.js no longer ships official 32-bit ARM builds from Node 24 on.
 
 ### Using New Repository (Recommended)
 ```bash
