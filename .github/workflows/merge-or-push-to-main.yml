@@ -11,7 +11,7 @@ on:
 jobs:
   build-test-image:
     name: Build test image
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
     outputs:
       date: ${{ steps.date.outputs.date }}
@@ -61,7 +61,7 @@ jobs:
 
   version-and-release:
     name: Version bump and release
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [approval, build-test-image]
     permissions:
       contents: write
@@ -108,7 +108,7 @@ jobs:
 
   build-release-images:
     name: Build and push release images
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [version-and-release, build-test-image]
     steps:
       - name: Checkout
@@ -144,7 +144,7 @@ jobs:
 
   create-github-release:
     name: Create GitHub Release
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [version-and-release, build-release-images]
     permissions:
       contents: write
