@@ -6,7 +6,7 @@ const Docker = require('dockerode')
 const os = require('os')
 
 async function main() {
-  const { containers, cronExpression, cyclePeriod, dockerHost } = getEnvironmentVariables()
+  const { containers, cronExpression, cyclePeriod } = getEnvironmentVariables()
   if (!containers.length || !cronExpression) {
     console.error('Missing required environment variables: RESTART_CONTAINERS, CRON_SCHEDULE')
     process.exit(1)
@@ -16,7 +16,7 @@ async function main() {
     return
   }
   const cycleLimiter = new Queue(1, cyclePeriod)
-  const docker = createDockerClient(dockerHost)
+  const docker = createDockerClient()
   await restartContainersAndNotify(containers, cycleLimiter, docker)
 }
 
@@ -24,8 +24,7 @@ function getEnvironmentVariables() {
   const containers = process.env.RESTART_CONTAINERS ? process.env.RESTART_CONTAINERS.split(',') : []
   const cronExpression = process.env.CRON_SCHEDULE
   const cyclePeriod = process.env.CYCLE_PERIOD || 10000
-  const dockerHost = process.env.DOCKER_HOST
-  return { containers, cronExpression, cyclePeriod, dockerHost }
+  return { containers, cronExpression, cyclePeriod }
 }
 
 function getHostIdentifier() {
@@ -41,17 +40,20 @@ function getArguments() {
   return args
 }
 
-function createDockerClient(dockerHost) {
-  if (dockerHost) {
-    return new Docker({
-      host: dockerHost
-    })
-  } else {
-    // Fallback to direct socket access
-    return new Docker({
-      socketPath: '/var/run/docker.sock'
-    })
+// Without options docker-modem reads DOCKER_HOST (tcp://, unix://, DOCKER_TLS_VERIFY, DOCKER_CERT_PATH)
+// and falls back to /var/run/docker.sock. Passing DOCKER_HOST as `host` treated the whole URL as a hostname.
+function createDockerClient() {
+  return new Docker()
+}
+
+function describeDockerError(containerName, error) {
+  if (error.statusCode === 404) {
+    return `Container ${containerName} not found`
   }
+  if (error.statusCode === 403) {
+    return `Docker API denied access to ${containerName} (403); a socket proxy needs CONTAINERS=1 and POST=1`
+  }
+  return `Docker API request for ${containerName} failed: ${error.message || error.code}`
 }
 
 async function restartContainersAndNotify(containers, cycleLimiter, docker) {
@@ -60,7 +62,10 @@ async function restartContainersAndNotify(containers, cycleLimiter, docker) {
     await cycleLimiter.wait(container, 0)
     await restartContainer(docker, container)
       .then(output => sendRestartNotification(container, true, getRestartExecutionTime(startTime), output))
-      .catch(error => sendRestartNotification(container, false, getRestartExecutionTime(startTime), error.message))
+      .catch(error => {
+        console.error(error.message)
+        return sendRestartNotification(container, false, getRestartExecutionTime(startTime), error.message)
+      })
       .finally(() => cycleLimiter.end(container))
   }
 }
@@ -81,7 +86,7 @@ async function restartContainer(docker, containerName) {
   try {
     await container.inspect()
   } catch (error) {
-    throw new Error(`Container ${containerName} not found: ${error.message}`)
+    throw new Error(describeDockerError(containerName, error))
   }
   try {
     const infoBefore = await container.inspect()
@@ -98,8 +103,7 @@ async function restartContainer(docker, containerName) {
     const infoAfter = await container.inspect()
     return `Container ${containerName} restarted successfully.\nStatus before: ${infoBefore.State.Status}\nStatus after: ${infoAfter.State.Status}`
   } catch (error) {
-    console.error(`Error restarting container ${containerName}:`, error.message)
-    throw error
+    throw new Error(describeDockerError(containerName, error))
   }
 }
 
@@ -118,6 +122,9 @@ async function checkContainerExistence(docker, containerNames) {
       await container.inspect()
       statuses.push({ name: containerName, exists: true })
     } catch (error) {
+      if (error.statusCode !== 404) {
+        console.error(describeDockerError(containerName, error))
+      }
       statuses.push({ name: containerName, exists: false })
     }
   }
@@ -132,8 +139,7 @@ async function sendRestartNotification(containerName, success, executionTime, ou
 
 async function sendNextExecutionNotification(containers, cronExpression) {
   const nextExecutionDate = getNextExecutionDate(cronExpression)
-  const { dockerHost } = getEnvironmentVariables()
-  const docker = createDockerClient(dockerHost)
+  const docker = createDockerClient()
 
   // Check container existence
   const containerStatuses = await checkContainerExistence(docker, containers)
