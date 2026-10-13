@@ -1,5 +1,5 @@
 const { Queue } = require('async-await-queue')
-const cronParser = require('cron-parser')
+const { CronExpressionParser } = require('cron-parser')
 const slackNotification = require('./slackNotification')
 const discordNotification = require('./discordNotification')
 const Docker = require('dockerode')
@@ -145,7 +145,7 @@ async function sendNextExecutionNotification(containers, cronExpression) {
 
 function getNextExecutionDate(cronExpression) {
   try {
-    const interval = cronParser.parseExpression(cronExpression)
+    const interval = CronExpressionParser.parse(cronExpression)
     return interval.next().toDate()
   } catch (err) {
     console.error('Error parsing cron expression:', err)

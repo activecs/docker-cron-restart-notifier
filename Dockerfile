@@ -7,13 +7,11 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY notifier-app/package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install production dependencies from the lockfile
+RUN npm ci --omit=dev
 
 # Copy the rest of the application source code
 COPY notifier-app/ .
-
-RUN ls -la /app/*
 
 # Stage 2: Setup the final image
 FROM node:26-alpine
